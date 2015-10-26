@@ -1,11 +1,13 @@
-all: deps compile
+.PHONY: all compile test clean
+
+all: compile
 
 compile:
-	./rebar compile
+	@./rebar3 compile
 
-deps:
-	./rebar get-deps
+test:
+	@./rebar3 eunit
 
 clean:
-	./rebar clean
-	rm -fr ebin
+	@./rebar clean
+	@rm -rf _build

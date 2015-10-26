@@ -1,37 +1,34 @@
-Erlang JWT Library
-=
+### jwt &mdash; Erlang JWT Library
 
-JWT is a simple authorization token [format](http://self-issued.info/docs/draft-ietf-oauth-json-web-token.html) based on JSON. [Peter Hizalev](http://twitter.com/petrohi) wrote this library at [Kato.im](http://kato.im). We're open-sourcing it in case someone else needs to create or parse JWT tokens with Erlang.
+---
 
-## Smoke test example
+JWT is a simple authorization token [format](http://jwt.io/) based on JSON.
 
-Install
+## Usage example
 
-    git clone git@github.com:kato-im/ejwt.git && cd ejwt
-    ./rebar get-deps
-    erl
+```erlang
+%% Create JWT token
+> application:ensure_all_started(jwt).
+> Key = <<"supas3cri7">>.
+> Claims = [
+    {user_id, 42},
+    {user_name, <<"Bob">>}
+  ].
+> {ok, Token} = jwt:encode(<<"HS256">>, Claims, Key).
+%% or with expiration
+> ExpirationSeconds = 86400.
+> {ok, Token} = jwt:encode(<<"HS256">>, Claims, ExpirationSeconds, Key).
 
-In Erlang shell:
+%% Parse JWT token
+> {ok, Claims} = jwt:decode(Token, Key).
+```
 
-    %% Create JWT token
-    application:start(crypto).
-    Key = <<"53F61451CAD6231FDCF6859C6D5B88C1EBD5DC38B9F7EBD990FADD4EB8EB9063">>.
-    Claims = {[
-        {user_id, <<"bob123">>},
-        {user_name, <<"Bob">>}
-    ]}.
-    ExpirationSeconds = 86400,
-    Token = ejwt:jwt(<<"HS256">>, Claims, ExpirationSeconds, Key).
+---
 
-    %% Parse JWT token
-    ejwt:parse_jwt(Token, Key).
+### Contributing
 
-
-You should get back the original claims Jterm, plus expiration claim:
-
-    {[
-        {<<"exp">>,1392607527},
-        {<<"user_id">>,<<"bob123">>},
-        {<<"user_name">>,<<"Bob">>}
-    ]}
-
+1. Fork it
+2. Create your feature branch (`git checkout -b my-new-feature`)
+3. Commit your changes (`git commit -am 'add some feature'`)
+4. Push to the branch (`git push origin my-new-feature`)
+5. Create new Pull Request
