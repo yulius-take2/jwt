@@ -4,7 +4,24 @@
 
 JWT is a simple authorization token [format](http://jwt.io/) based on JSON.
 
-## Usage example
+#### Installation
+
+If you use rebar3 or mix (Elixir):
+
+```erlang
+% rebar.config
+{deps, [{jwt}]}.
+```
+
+```elixir
+def deps do
+[{:jwt, "~> 0.1"}]
+end
+```
+
+Or use it as git dependency.
+
+#### Usage example
 
 ```erlang
 %% Create JWT token

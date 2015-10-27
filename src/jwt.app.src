@@ -4,4 +4,8 @@
   , {registered, []}
   , {applications, [kernel, stdlib, crypto, jsx, base64url]}
   , {env, []}
+
+  , {maintainers, ["Yuri Artemev", "Peter Hizalev"]}
+  , {licenses, ["MIT"]}
+  , {links, [{"GitHub", "https://github.com/artemeff/jwt"}]}
  ]}.
