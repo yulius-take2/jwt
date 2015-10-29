@@ -2,6 +2,10 @@
 
 ---
 
+[![Hex.pm](https://img.shields.io/hexpm/v/jwt.svg)](https://hex.pm/packages/jwt)
+
+---
+
 JWT is a simple authorization token [format](http://jwt.io/) based on JSON.
 
 #### Installation
