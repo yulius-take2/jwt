@@ -35,18 +35,21 @@ encode(Alg, ClaimsSet, Expiration, Key) ->
     end.
 
 decode(Token, Key) ->
-    SplitToken = [Header, Claims | _] = split_token(Token),
-    case decode_jwt(SplitToken) of
-        {#{<<"typ">> := Type, <<"alg">> := Alg} = _Header, ClaimsJSON, Signature} ->
-            case jwt_check_sig(Type, Alg, Header, Claims, Signature, Key) of
-                false -> {error, invalid_signature};
-                true ->
-                    case jwt_is_expired(ClaimsJSON) of
-                        true  -> {error, expired};
-                        false -> {ok, ClaimsJSON}
-                    end
+    case split_token(Token) of
+        SplitToken = [Header, Claims | _] ->
+            case decode_jwt(SplitToken) of
+                {#{<<"typ">> := Type, <<"alg">> := Alg} = _Header, ClaimsJSON, Signature} ->
+                    case jwt_check_sig(Type, Alg, Header, Claims, Signature, Key) of
+                        false -> {error, invalid_signature};
+                        true ->
+                            case jwt_is_expired(ClaimsJSON) of
+                                true  -> {error, expired};
+                                false -> {ok, ClaimsJSON}
+                            end
+                    end;
+                invalid -> {error, invalid_token}
             end;
-        invalid -> {error, invalid_token}
+        _ -> {error, invalid_token}
     end.
 
 %%

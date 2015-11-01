@@ -14,6 +14,7 @@ jwt_test_() -> {setup,
     , fun test_decoding_header_error/0
     , fun test_decoding_payload_error/0
     , fun test_decoding_signature_error/0
+    , fun test_decoding_very_bad_token/0
     ]}.
 
 start() -> ok.
@@ -86,6 +87,11 @@ test_decoding_signature_error() ->
     Claims = jwt:decode(makeToken(Header, Payload, Signature), ?SECRET),
 
     ?assertMatch({error, invalid_signature}, Claims).
+
+test_decoding_very_bad_token() ->
+    Claims = jwt:decode(<<"very_bad">>, ?SECRET),
+
+    ?assertMatch({error, invalid_token}, Claims).
 
 %%
 %% Helpers
