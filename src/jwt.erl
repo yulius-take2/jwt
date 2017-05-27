@@ -123,13 +123,8 @@ decode_jwt(_) ->
 %%
 
 jwt_add_exp(ClaimsSet, Expiration) ->
-    Ts = epoch(),
-    Exp = case Expiration of
-        {hourly, Expiration0} -> (Ts - (Ts rem ?HOUR)) + Expiration0;
-        {daily, Expiration0} -> (Ts - (Ts rem ?DAY)) + Expiration0;
-        _ -> epoch() + Expiration
-    end,        
-    [{<<"exp">>, Exp} | ClaimsSet].
+    Exp = expiration_to_epoch(Expiration),
+    append_claim(ClaimsSet, <<"exp">>, Exp).
 
 jwt_header(Alg) ->
     [ {<<"alg">>, Alg}
@@ -152,3 +147,15 @@ algorithm_to_crypto(<<"HS512">>) -> sha512;
 algorithm_to_crypto(_)           -> undefined.
 
 epoch() -> erlang:system_time(seconds).
+
+expiration_to_epoch(Expiration) ->
+    Ts = epoch(),
+    case Expiration of
+        {hourly, Expiration0} -> (Ts - (Ts rem ?HOUR)) + Expiration0;
+        {daily, Expiration0} -> (Ts - (Ts rem ?DAY)) + Expiration0;
+        _ -> epoch() + Expiration
+    end.
+
+append_claim(ClaimsSet, Key, Val) when is_map(ClaimsSet) ->
+  ClaimsSet#{ Key => Val };
+append_claim(ClaimsSet, Key, Val) -> [{ Key, Val } | ClaimsSet].
