@@ -8,6 +8,7 @@ jwt_test_() -> {setup,
     fun start/0, fun stop/1,
     [ fun test_encoding/0
     , fun test_encoding_with_exp/0
+    , fun test_encoding_map_claimset_with_exp/0
     , fun test_encoding_with_undefined_algorithm/0
     , fun test_encoding_with_all_algorithms/0
     , fun test_decoding_simple/0
@@ -37,6 +38,12 @@ test_encoding() ->
 test_encoding_with_exp() ->
     ExpirationSeconds = 86400,
     Result = jwt:encode(<<"HS256">>, [], ExpirationSeconds, ?SECRET),
+
+    ?assertMatch({ok, _Token}, Result).
+
+test_encoding_map_claimset_with_exp() ->
+    ExpirationSeconds = 86400,
+    Result = jwt:encode(<<"HS256">>, #{}, ExpirationSeconds, ?SECRET),
 
     ?assertMatch({ok, _Token}, Result).
 
