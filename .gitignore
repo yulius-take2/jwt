@@ -3,4 +3,5 @@ _build
 *.o
 *.beam
 *.plt
+*.sublime-*
 erl_crash.dump
