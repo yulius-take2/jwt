@@ -96,10 +96,19 @@ jwt_is_expired(_) ->
     false.
 
 jwt_check_sig(<<"JWT">>, Alg, Header, Claims, Signature, Key) ->
-    Payload = <<Header/binary, ".", Claims/binary>>,
-    jwt_sign(Alg, Payload, Key) =:= Signature;
+    jwt_check_sig(algorithm_to_crypto(Alg), <<Header/binary, ".", Claims/binary>>, Signature, Key);
 jwt_check_sig(_, _, _, _, _, _) ->
     false.
+
+jwt_check_sig({hmac, _} = Alg, Payload, Signature, Key) ->
+    jwt_sign_with_crypto(Alg, Payload, Key) =:= Signature;
+
+jwt_check_sig({rsa, Crypto}, Payload, Signature, Key) ->
+    public_key:verify(Payload, Crypto, base64url:decode(Signature), Key);
+    
+jwt_check_sig(_, _, _, _) ->
+    false.
+
 
 split_token(Token) ->
     binary:split(Token, <<".">>, [global]).
@@ -136,14 +145,21 @@ jwt_header(Alg) ->
 %%
 
 jwt_sign(Alg, Payload, Key) ->
-    case algorithm_to_crypto(Alg) of
-        undefined -> undefined;
-        Crypto -> base64url:encode(crypto:hmac(Crypto, Key, Payload))
-    end.
+    jwt_sign_with_crypto(algorithm_to_crypto(Alg), Payload, Key).
 
-algorithm_to_crypto(<<"HS256">>) -> sha256;
-algorithm_to_crypto(<<"HS384">>) -> sha384;
-algorithm_to_crypto(<<"HS512">>) -> sha512;
+jwt_sign_with_crypto({hmac, Crypto}, Payload, Key) ->
+    base64url:encode(crypto:hmac(Crypto, Key, Payload));
+
+jwt_sign_with_crypto({rsa,  Crypto}, Payload, Key) ->
+    base64url:encode(public_key:sign(Payload, Crypto, Key));
+
+jwt_sign_with_crypto(_, _Payload, _Key) ->
+    undefined.
+
+algorithm_to_crypto(<<"HS256">>) -> {hmac, sha256};
+algorithm_to_crypto(<<"HS384">>) -> {hmac, sha384};
+algorithm_to_crypto(<<"HS512">>) -> {hmac, sha512};
+algorithm_to_crypto(<<"RS256">>) -> {rsa,  sha256};
 algorithm_to_crypto(_)           -> undefined.
 
 epoch() -> erlang:system_time(seconds).
