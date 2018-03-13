@@ -30,7 +30,6 @@ test_decoding() ->
     {ok, Json} = file:read_file("./test/jwks.json"),
     {ok, PKey} = jwk:decode(?ID, Json),
     Expected   = public(),
-
     ?assertMatch(Expected, PKey).
 
 
