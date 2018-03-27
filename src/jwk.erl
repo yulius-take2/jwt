@@ -26,7 +26,6 @@ encode(Id, #'RSAPublicKey'{modulus = N, publicExponent = E}) ->
                 #{
                     kid => Id,
                     kty => <<"RSA">>, 
-                    alg => <<"RS256">>, 
                     n   => encode_int(N), 
                     e   => encode_int(E)
                 }
@@ -63,7 +62,7 @@ decode(Id, Json) ->
 decode([]) ->
     {error, not_found};
 
-decode([#{<<"kty">> := <<"RSA">>, <<"alg">> := <<"RS256">>, <<"n">> := N, <<"e">> := E} | _]) ->
+decode([#{<<"kty">> := <<"RSA">>, <<"n">> := N, <<"e">> := E} | _]) ->
     {ok, 
         #'RSAPublicKey'{
             modulus        = decode_int(N), 
