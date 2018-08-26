@@ -8,6 +8,7 @@ jwk_test_() ->
         [
           fun test_encoding/0
         , fun test_decoding/0
+        , fun test_decoding_parsed_json/0
         ]
     }.
 
@@ -31,6 +32,13 @@ test_decoding() ->
     {ok, PKey} = jwk:decode(?ID, Json),
     Expected   = public(),
     ?assertMatch(Expected, PKey).
+
+
+test_decoding_parsed_json() ->
+    {ok, PKey} = jwk:decode(?ID, json()),
+    Expected   = public(),
+    ?assertMatch(Expected, PKey).
+
 
 
 %%

@@ -48,8 +48,7 @@ encode_int(X) ->
 %% decode JWK to Erlang/OTP Key
 -spec decode(id(), json()) -> {ok, public_key()} | {error, _}.
 
-decode(Id, Json) ->
-    #{<<"keys">> := JWTs} = jsx:decode(Json, [return_maps]),
+decode(Id, #{<<"keys">> := JWTs}) ->
     decode(
         lists:dropwhile(
             fun(X) -> 
@@ -57,7 +56,11 @@ decode(Id, Json) ->
             end,
             JWTs
         )
-    ).
+    );
+
+decode(Id, Json) when is_binary(Json) ->
+    decode(Id, jsx:decode(Json, [return_maps])).
+    
 
 decode([]) ->
     {error, not_found};
