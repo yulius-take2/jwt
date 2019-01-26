@@ -1,6 +1,6 @@
 {application, jwt,
   [ {description, "Erlang JWT library"}
-  , {vsn, "0.1.6"}
+  , {vsn, "0.1.7"}
   , {registered, []}
   , {applications, [kernel, stdlib, crypto, public_key, jsx, base64url]}
   , {env, []}
