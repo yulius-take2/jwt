@@ -38,8 +38,8 @@ decode(Token, Key) ->
     case split_token(Token) of
         SplitToken = [Header, Claims | _] ->
             case decode_jwt(SplitToken) of
-                {#{<<"typ">> := Type, <<"alg">> := Alg} = _Header, ClaimsJSON, Signature} ->
-                    case jwt_check_sig(Type, Alg, Header, Claims, Signature, Key) of
+                {#{<<"alg">> := Alg} = _Header, ClaimsJSON, Signature} ->
+                    case jwt_check_sig(Alg, Header, Claims, Signature, Key) of
                         false -> {error, invalid_signature};
                         true ->
                             case jwt_is_expired(ClaimsJSON) of
@@ -58,10 +58,10 @@ decode(Token, DefaultKey, IssuerKeyMapping) ->
     case split_token(Token) of
         SplitToken = [Header, Claims | _] ->
             case decode_jwt(SplitToken) of
-                {#{<<"typ">> := Type, <<"alg">> := Alg} = _Header, ClaimsJSON, Signature} ->
+                {#{<<"alg">> := Alg} = _Header, ClaimsJSON, Signature} ->
                     Issuer = maps:get(<<"iss">>, ClaimsJSON, undefined),
                     Key = maps:get(Issuer, IssuerKeyMapping, DefaultKey),
-                    case jwt_check_sig(Type, Alg, Header, Claims, Signature, Key) of
+                    case jwt_check_sig(Alg, Header, Claims, Signature, Key) of
                         false -> {error, invalid_signature};
                         true ->
                             case jwt_is_expired(ClaimsJSON) of
@@ -95,17 +95,15 @@ jwt_is_expired(#{<<"exp">> := Exp} = _ClaimsJSON) ->
 jwt_is_expired(_) ->
     false.
 
-jwt_check_sig(<<"JWT">>, Alg, Header, Claims, Signature, Key) ->
-    jwt_check_sig(algorithm_to_crypto(Alg), <<Header/binary, ".", Claims/binary>>, Signature, Key);
-jwt_check_sig(_, _, _, _, _, _) ->
-    false.
+jwt_check_sig(Alg, Header, Claims, Signature, Key) ->
+    jwt_check_sig(algorithm_to_crypto(Alg), <<Header/binary, ".", Claims/binary>>, Signature, Key).
 
 jwt_check_sig({hmac, _} = Alg, Payload, Signature, Key) ->
     jwt_sign_with_crypto(Alg, Payload, Key) =:= Signature;
 
 jwt_check_sig({rsa, Crypto}, Payload, Signature, Key) ->
     public_key:verify(Payload, Crypto, base64url:decode(Signature), Key);
-    
+
 jwt_check_sig(_, _, _, _) ->
     false.
 

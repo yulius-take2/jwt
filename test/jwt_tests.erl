@@ -15,6 +15,7 @@ jwt_test_() -> {setup,
     , fun test_decoding_payload_error/0
     , fun test_decoding_signature_error/0
     , fun test_decoding_very_bad_token/0
+    , fun test_decoding_without_type/0
 
     , fun test_encoding_with_none/0
     , fun test_decoding_with_none/0
@@ -74,6 +75,22 @@ test_decoding_simple() ->
                        , <<"user_name">> := <<"John Snow">>
                        }}, Claims).
 
+%%
+%% "typ" (Type) Header Parameter is OPTIONAL
+%% see https://tools.ietf.org/html/rfc7519#section-5.1
+test_decoding_without_type() ->
+    TokenWithoutTypHeder = <<
+        "eyJhbGciOiJIUzI1NiJ9.",
+        "eyJ1c2VyX2lkIjo0NCwidXNlcl9uYW1lIjoiSmFpbWUgTGFubmlzdGVyIn0.",
+        "4OJ-MO3VMWaQ6zUVlDL_jq5hnRu-_nfPZvUuS32b3VE"
+    >>,
+
+    Claims = jwt:decode(TokenWithoutTypHeder, ?SECRET),
+
+    ?assertMatch({ok, #{ <<"user_id">> := 44
+                       , <<"user_name">> := <<"Jaime Lannister">>
+                       }}, Claims).
+
 test_decoding_header_error() ->
     Header = <<"...">>,
     Payload = <<"eyJ1c2VyX2lkIjo0MiwidXNlcl9uYW1lIjoiSm9obiBTbm93In0">>,
@@ -127,7 +144,7 @@ test_decoding_with_none() ->
 
 
 %%
-%% 
+%%
 test_encoding_with_rs256() ->
     Claims = #{sub => 1234567890, name => <<"John Doe">>, admin => true},
     {ok, Token} = jwt:encode(<<"RS256">>, Claims, rsa_secret()),
@@ -145,8 +162,8 @@ test_decoding_with_rs256() ->
 
     Claims = jwt:decode(makeToken(Header, Payload, Signature), rsa_public()),
 
-    ?assertMatch({ok, #{<<"sub">>   := <<"1234567890">>, 
-                        <<"name">>  := <<"John Doe">>, 
+    ?assertMatch({ok, #{<<"sub">>   := <<"1234567890">>,
+                        <<"name">>  := <<"John Doe">>,
                         <<"admin">> := true}}, Claims).
 
 test_decoding_with_rs256_invalid_signature() ->
