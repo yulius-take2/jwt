@@ -1,6 +1,5 @@
 -module(jwt_tests).
 -include_lib("eunit/include/eunit.hrl").
--compile([export_all]).
 
 -define(SECRET, <<"supas3cri7">>).
 
