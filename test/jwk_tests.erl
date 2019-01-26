@@ -1,8 +1,7 @@
 -module(jwk_tests).
 -include_lib("eunit/include/eunit.hrl").
--compile([export_all]).
 
-jwk_test_() -> 
+jwk_test_() ->
     {setup,
         fun start/0, fun stop/1,
         [
