@@ -23,7 +23,11 @@ jwt_test_() -> {setup,
     , fun test_encoding_with_rs256/0
     , fun test_decoding_with_rs256/0
     , fun test_decoding_with_rs256_invalid_signature/0
-    ]}.
+
+    , fun test_encoding_with_ecdsa/0
+    , fun test_decoding_ecdsa_with_public_key/0
+    , fun test_decoding_ecdsa_invalid_signature/0
+   ]}.
 
 start() -> ok.
 stop(_) -> ok.
@@ -175,6 +179,42 @@ test_decoding_with_rs256_invalid_signature() ->
 
     ?assertMatch({error, invalid_signature}, Claims).
 
+
+test_encoding_with_ecdsa() ->
+    Claims = #{
+      <<"admin">> => true,
+      <<"name">> => <<"Daenerys Targaryen">>
+    },
+    Key = ecdsa_private_key(),
+    {ok, Token} = jwt:encode(<<"ES256">>, Claims, Key),
+    ?assertMatch({ok, #{
+        <<"admin">> := true,
+        <<"name">> := <<"Daenerys Targaryen">>
+    }}, jwt:decode(Token, Key)).
+
+test_decoding_ecdsa_with_public_key() ->
+    Header = <<"eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9">>,
+    Payload = <<"eyJhZG1pbiI6dHJ1ZSwibmFtZSI6IkpvcmFoIE1vcm1vbnQifQ">>,
+    Signature = <<
+        "8jNpfVUBZd7Xhe9kFq5w6J86yWhow9C6ojrUv966KV2",
+        "Z0xNAvru-yL97lXV-8AthqJrWqcjSxBZ7VNULM9NDEg"
+    >>,
+    Token = makeToken(Header, Payload, Signature),
+    ?assertMatch({ok, #{
+        <<"admin">> := true,
+        <<"name">> := <<"Jorah Mormont">>
+    }}, jwt:decode(Token, ecdsa_public_key())).
+
+test_decoding_ecdsa_invalid_signature() ->
+    Header = <<"eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9">>,
+    Payload = <<"eyJuYW1lIjoiSm9yYWggTW9ybW9udCIsImFkbWluIjp0cnVlfQ">>,
+    Signature = <<
+        "BfI7j9Dv8KAMj0_u4-y9z7aW6-GMiujp8DlzW7P8Z5P",
+        "SZrK2G3hRqBNYhgBpcd-RUm8qIb_kXIBWdgzf2mtCQQ"
+    >>,
+    ?assertMatch({error, invalid_signature},
+        jwt:decode(makeToken(Header, Payload, Signature), ecdsa_public_key())).
+
 %%
 %% Helpers
 %%
@@ -183,12 +223,18 @@ makeToken(Header, Payload, Sign) ->
     <<Header/binary, ".", Payload/binary, ".", Sign/binary>>.
 
 rsa_public() ->
-    {ok, PEM} = file:read_file("./test/public.pem"),
-    [ RSAEntry ] = public_key:pem_decode(PEM),
-    public_key:pem_entry_decode(RSAEntry).
-
+    from_pem_file("./test/public.pem").
 
 rsa_secret() ->
-    {ok, PEM} = file:read_file("./test/secret.pem"),
-    [ RSAEntry ] = public_key:pem_decode(PEM),
-    public_key:pem_entry_decode(RSAEntry, "").
+    from_pem_file("./test/secret.pem").
+
+ecdsa_private_key() ->
+    from_pem_file("./test/ecdsa_private.pem").
+
+ecdsa_public_key() ->
+    from_pem_file("./test/ecdsa_public.pem").
+
+from_pem_file(FileName) ->
+    {ok, Data} = file:read_file(FileName),
+    [Decoded] = public_key:pem_decode(Data),
+    public_key:pem_entry_decode(Decoded).
