@@ -1,9 +1,12 @@
+%% @doc
 %%
 %% JWT Library for Erlang.
+%%
 %% Written by Peter Hizalev at Kato (http://kato.im)
+%%
 %% Rewritten by Yuri Artemev (http://artemff.com)
 %%
-
+%% @end
 -module(jwt).
 
 -export([decode/2, decode/3]).
@@ -22,6 +25,24 @@
     ClaimsSet :: map() | list(),
     Key :: binary() | public_key:private_key()
 ) -> {ok, Token :: binary()} | {error, any()}.
+%% @doc
+%%
+%% Creates a token from given data and signs it with a given secret
+%%
+%% Parameters are
+%% <ul>
+%%   <li>
+%%      `Alg' is a binary one of
+%%
+%%      [HS256, HS384, HS512, RS256, RS384, RS512, ES256, ES384, ES512, PS256, PS384, PS512]
+%%
+%%      But only [HS256, HS384, HS512, RS256] are supported
+%%  </li>
+%%  <li>`ClaimsSet' the payload of the token. Can be both map and proplist</li>
+%%  <li>`Key' binary in case of hmac encryption and private key if rsa</li>
+%% </ul>
+%%
+%% @end
 encode(Alg, ClaimsSet, Key) ->
     Claims = base64url:encode(jsx:encode(ClaimsSet)),
     Header = base64url:encode(jsx:encode(jwt_header(Alg))),
@@ -37,6 +58,18 @@ encode(Alg, ClaimsSet, Key) ->
     Expiration :: expiration(),
     Key :: binary() | public_key:private_key()
 ) -> {ok, Token :: binary()} | {error, any()}.
+%% @doc
+%%
+%% Creates a token from given data and signs it with a given secret
+%% and also adds `exp' claim to payload
+%%
+%% `Expiration' can be one of the tuples:
+%%    `{hourly, SecondsAfterBeginningOfCurrentHour}',
+%%    `{daily, SecondsAfterBeginningOfCurrentDay}'
+%% or can be just an integer representing the amount of seconds
+%% the token will live
+%%
+%% @end
 encode(Alg, ClaimsSet, Expiration, Key) ->
     Claims = base64url:encode(jsx:encode(jwt_add_exp(ClaimsSet, Expiration))),
     encode(Alg, Claims, Key).
@@ -45,6 +78,16 @@ encode(Alg, ClaimsSet, Expiration, Key) ->
     Token :: binary(),
     Key :: binary() | public_key:public_key() | public_key:private_key()
 ) -> {ok, Claims :: map()} | {error, any()}.
+%% @doc
+%%
+%% Decodes a token, checks the signature and returns the content of the token
+%%
+%% <ul>
+%%   <li>`Token' is a JWT itself</li>
+%%   <li>`Key' is a secret phrase or public/private key depend on encryption algorithm</li>
+%% </ul>
+%%
+%% @end
 decode(Token, Key) ->
     decode(Token, Key, #{}).
 
@@ -55,6 +98,13 @@ decode(Token, Key) ->
     DefaultKey :: binary() | public_key:public_key() | public_key:private_key(),
     IssuerKeyMapping :: map()
 ) -> {ok, Claims :: map()} | {error, any()}.
+%% @doc
+%%
+%% Decode with an issuer key mapping
+%%
+%% Receives the issuer key mapping as the last parameter
+%%
+%% @end
 decode(Token, DefaultKey, IssuerKeyMapping) ->
     case split_token(Token) of
         SplitToken = [Header, Claims | _] ->
@@ -81,6 +131,7 @@ decode(Token, DefaultKey, IssuerKeyMapping) ->
 %% Decoding helpers
 %%
 -spec jsx_decode_safe(binary()) -> map() | invalid.
+%% @private
 jsx_decode_safe(Bin) ->
     try
         jsx:decode(Bin, [return_maps])
@@ -89,6 +140,7 @@ jsx_decode_safe(Bin) ->
     end.
 
 -spec jwt_is_expired(map()) -> boolean().
+%% @private
 jwt_is_expired(#{<<"exp">> := Exp} = _ClaimsJSON) ->
     case (Exp - epoch()) of
         DeltaSecs when DeltaSecs > 0 -> false;
@@ -104,6 +156,7 @@ jwt_is_expired(_) ->
     Signature :: binary(),
     Key :: binary() | public_key:public_key() | public_key:private_key()
 ) -> boolean().
+%% @private
 jwt_check_sig(Alg, Header, Claims, Signature, Key) ->
     jwt_check_sig(algorithm_to_crypto(Alg), <<Header/binary, ".", Claims/binary>>, Signature, Key).
 
@@ -113,6 +166,7 @@ jwt_check_sig(Alg, Header, Claims, Signature, Key) ->
     Signature :: binary(),
     Key :: binary() | public_key:public_key() | public_key:private_key()
 ) -> boolean().
+%% @private
 jwt_check_sig({hmac, _} = Alg, Payload, Signature, Key) ->
     jwt_sign_with_crypto(Alg, Payload, Key) =:= Signature;
 
@@ -130,10 +184,12 @@ jwt_check_sig(_, _, _, _) ->
     false.
 
 -spec split_token(binary()) -> list(binary()).
+%% @private
 split_token(Token) ->
     binary:split(Token, <<".">>, [global]).
 
 -spec decode_jwt(list(binary())) -> {map(), map(), binary()} | invalid.
+%% @private
 decode_jwt([Header, Claims, Signature]) ->
     try
         [HeaderJSON, ClaimsJSON] =
@@ -152,6 +208,7 @@ decode_jwt(_) ->
 %% Encoding helpers
 %%
 -spec jwt_add_exp(ClaimsSet :: map() | list(), Expiration :: expiration()) -> map() | list().
+%% @private
 jwt_add_exp(ClaimsSet, Expiration) ->
     Exp = expiration_to_epoch(Expiration),
     append_claim(ClaimsSet, <<"exp">>, Exp).
@@ -170,6 +227,7 @@ jwt_header(Alg) ->
     Payload :: binary(),
     Key :: binary() | public_key:private_key()
 ) -> binary() | undefined.
+%% @private
 jwt_sign(Alg, Payload, Key) ->
     jwt_sign_with_crypto(algorithm_to_crypto(Alg), Payload, Key).
 
@@ -190,6 +248,7 @@ jwt_sign_with_crypto(_, _Payload, _Key) ->
     undefined.
 
 -spec algorithm_to_crypto(binary()) -> {atom(), atom()} | undefined.
+%% @private
 algorithm_to_crypto(<<"HS256">>) -> {hmac, sha256};
 algorithm_to_crypto(<<"HS384">>) -> {hmac, sha384};
 algorithm_to_crypto(<<"HS512">>) -> {hmac, sha512};
@@ -198,9 +257,11 @@ algorithm_to_crypto(<<"ES256">>) -> {ecdsa, sha256};
 algorithm_to_crypto(_)           -> undefined.
 
 -spec epoch() -> non_neg_integer().
+%% @private
 epoch() -> erlang:system_time(seconds).
 
 -spec expiration_to_epoch(Expiration :: expiration()) -> neg_integer().
+%% @private
 expiration_to_epoch(Expiration) ->
     Ts = epoch(),
     case Expiration of
@@ -210,6 +271,7 @@ expiration_to_epoch(Expiration) ->
     end.
 
 -spec append_claim(ClaimsSet :: map() | list(), binary(), any()) -> map() | list().
+%% @private
 append_claim(ClaimsSet, Key, Val) when is_map(ClaimsSet) ->
   ClaimsSet#{ Key => Val };
 append_claim(ClaimsSet, Key, Val) -> [{ Key, Val } | ClaimsSet].

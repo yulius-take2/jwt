@@ -5,3 +5,4 @@ _build
 *.plt
 *.sublime-*
 erl_crash.dump
+doc/
