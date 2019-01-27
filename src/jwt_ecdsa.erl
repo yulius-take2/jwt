@@ -60,7 +60,7 @@ int_to_bin_pos(X, Ds) ->
 %% @private
 int_to_bin_neg(-1, Ds = [MSB|_]) when MSB >= 16#80 ->
     list_to_binary(Ds);
-int_to_bin_neg(X,Ds) ->
+int_to_bin_neg(X, Ds) ->
     int_to_bin_neg(X bsr 8, [(X band 255)|Ds]).
 
 %% @private

@@ -223,18 +223,17 @@ makeToken(Header, Payload, Sign) ->
     <<Header/binary, ".", Payload/binary, ".", Sign/binary>>.
 
 rsa_public() ->
-    from_pem_file("./test/public.pem").
+    from_pem_file("./test/pem/rsa_public.pem").
 
 rsa_secret() ->
-    from_pem_file("./test/secret.pem").
+    from_pem_file("./test/pem/rsa_private.pem").
 
 ecdsa_private_key() ->
-    from_pem_file("./test/ecdsa_private.pem").
+    from_pem_file("./test/pem/ecdsa_private.pem").
 
 ecdsa_public_key() ->
-    from_pem_file("./test/ecdsa_public.pem").
+    from_pem_file("./test/pem/ecdsa_public.pem").
 
 from_pem_file(FileName) ->
-    {ok, Data} = file:read_file(FileName),
-    [Decoded] = public_key:pem_decode(Data),
-    public_key:pem_entry_decode(Decoded).
+    {ok, Bin} = file:read_file(FileName),
+    Bin.
