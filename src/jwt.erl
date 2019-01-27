@@ -27,30 +27,10 @@ encode(Alg, ClaimsSet, Key) ->
 
 encode(Alg, ClaimsSet, Expiration, Key) ->
     Claims = base64url:encode(jsx:encode(jwt_add_exp(ClaimsSet, Expiration))),
-    Header = base64url:encode(jsx:encode(jwt_header(Alg))),
-    Payload = <<Header/binary, ".", Claims/binary>>,
-    case jwt_sign(Alg, Payload, Key) of
-        undefined -> {error, algorithm_not_supported};
-        Signature -> {ok, <<Payload/binary, ".", Signature/binary>>}
-    end.
+    encode(Alg, Claims, Key).
 
 decode(Token, Key) ->
-    case split_token(Token) of
-        SplitToken = [Header, Claims | _] ->
-            case decode_jwt(SplitToken) of
-                {#{<<"alg">> := Alg} = _Header, ClaimsJSON, Signature} ->
-                    case jwt_check_sig(Alg, Header, Claims, Signature, Key) of
-                        false -> {error, invalid_signature};
-                        true ->
-                            case jwt_is_expired(ClaimsJSON) of
-                                true  -> {error, expired};
-                                false -> {ok, ClaimsJSON}
-                            end
-                    end;
-                invalid -> {error, invalid_token}
-            end;
-        _ -> {error, invalid_token}
-    end.
+    decode(Token, Key, #{}).
 
 % When there are multiple issuers and keys are on a per issuer bases
 % then apply those keys instead
