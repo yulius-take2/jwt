@@ -91,7 +91,7 @@ Or use it as git dependency.
 
 
 <table width="100%" border="0" summary="list of modules">
-<tr><td><a href="http://github.com/artemeff/jwt/blob/master/doc/jwk.md" class="module">jwk</a></td></tr>
-<tr><td><a href="http://github.com/artemeff/jwt/blob/master/doc/jwt.md" class="module">jwt</a></td></tr>
-<tr><td><a href="http://github.com/artemeff/jwt/blob/master/doc/jwt_ecdsa.md" class="module">jwt_ecdsa</a></td></tr></table>
+<tr><td><a href="jwk.md" class="module">jwk</a></td></tr>
+<tr><td><a href="jwt.md" class="module">jwt</a></td></tr>
+<tr><td><a href="jwt_ecdsa.md" class="module">jwt_ecdsa</a></td></tr></table>
 
