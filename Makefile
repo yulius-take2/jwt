@@ -1,4 +1,4 @@
-.PHONY: all compile test clean
+.PHONY: all compile test lint clean
 
 all: compile
 
@@ -7,6 +7,9 @@ compile:
 
 test:
 	@./rebar3 eunit
+
+lint:
+	elvis rock --verbose
 
 clean:
 	@./rebar3 clean

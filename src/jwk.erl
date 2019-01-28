@@ -1,6 +1,6 @@
 %%
-%% RFC 7517: JSON Web Key (JWK) 
-%% 
+%% RFC 7517: JSON Web Key (JWK)
+%%
 
 -module(jwk).
 -include_lib("public_key/include/OTP-PUB-KEY.hrl").
@@ -21,12 +21,12 @@
 encode(Id, #'RSAPublicKey'{modulus = N, publicExponent = E}) ->
     {ok, jsx:encode(
         #{
-            keys => 
+            keys =>
             [
                 #{
                     kid => Id,
-                    kty => <<"RSA">>, 
-                    n   => encode_int(N), 
+                    kty => <<"RSA">>,
+                    n   => encode_int(N),
                     e   => encode_int(E)
                 }
             ]
@@ -51,8 +51,8 @@ encode_int(X) ->
 decode(Id, #{<<"keys">> := JWTs}) ->
     decode(
         lists:dropwhile(
-            fun(X) -> 
-                maps:get(<<"kid">>, X, undefined) /= Id 
+            fun(X) ->
+                maps:get(<<"kid">>, X, undefined) /= Id
             end,
             JWTs
         )
@@ -60,15 +60,15 @@ decode(Id, #{<<"keys">> := JWTs}) ->
 
 decode(Id, Json) when is_binary(Json) ->
     decode(Id, jsx:decode(Json, [return_maps])).
-    
+
 
 decode([]) ->
     {error, not_found};
 
 decode([#{<<"kty">> := <<"RSA">>, <<"n">> := N, <<"e">> := E} | _]) ->
-    {ok, 
+    {ok,
         #'RSAPublicKey'{
-            modulus        = decode_int(N), 
+            modulus        = decode_int(N),
             publicExponent = decode_int(E)
         }
     };
