@@ -101,8 +101,15 @@ jwt_check_sig(Alg, Header, Claims, Signature, Key) ->
 jwt_check_sig({hmac, _} = Alg, Payload, Signature, Key) ->
     jwt_sign_with_crypto(Alg, Payload, Key) =:= Signature;
 
+jwt_check_sig({Algo, Crypto}, Payload, Signature, Pem)
+    when (Algo =:= rsa orelse Algo =:= ecdsa) andalso is_binary(Pem) ->
+    jwt_check_sig({Algo, Crypto}, Payload, Signature, pem_to_key(Pem));
+
 jwt_check_sig({rsa, Crypto}, Payload, Signature, Key) ->
     public_key:verify(Payload, Crypto, base64url:decode(Signature), Key);
+
+jwt_check_sig({ecdsa, Crypto}, Payload, Signature, Key) ->
+    public_key:verify(Payload, Crypto, jwt_ecdsa:signature(Signature), Key);
 
 jwt_check_sig(_, _, _, _) ->
     false.
@@ -148,8 +155,15 @@ jwt_sign(Alg, Payload, Key) ->
 jwt_sign_with_crypto({hmac, Crypto}, Payload, Key) ->
     base64url:encode(crypto:hmac(Crypto, Key, Payload));
 
-jwt_sign_with_crypto({rsa,  Crypto}, Payload, Key) ->
+jwt_sign_with_crypto({Algo, Crypto}, Payload, Pem)
+    when (Algo =:= rsa orelse Algo =:= ecdsa) andalso is_binary(Pem) ->
+    jwt_sign_with_crypto({Algo, Crypto}, Payload, pem_to_key(Pem));
+
+jwt_sign_with_crypto({rsa, Crypto}, Payload, Key) ->
     base64url:encode(public_key:sign(Payload, Crypto, Key));
+
+jwt_sign_with_crypto({ecdsa, Crypto}, Payload, Key) ->
+    base64url:encode(jwt_ecdsa:signature(Payload, Crypto, Key));
 
 jwt_sign_with_crypto(_, _Payload, _Key) ->
     undefined.
@@ -158,6 +172,7 @@ algorithm_to_crypto(<<"HS256">>) -> {hmac, sha256};
 algorithm_to_crypto(<<"HS384">>) -> {hmac, sha384};
 algorithm_to_crypto(<<"HS512">>) -> {hmac, sha512};
 algorithm_to_crypto(<<"RS256">>) -> {rsa,  sha256};
+algorithm_to_crypto(<<"ES256">>) -> {ecdsa, sha256};
 algorithm_to_crypto(_)           -> undefined.
 
 epoch() -> erlang:system_time(seconds).
@@ -173,3 +188,7 @@ expiration_to_epoch(Expiration) ->
 append_claim(ClaimsSet, Key, Val) when is_map(ClaimsSet) ->
   ClaimsSet#{ Key => Val };
 append_claim(ClaimsSet, Key, Val) -> [{ Key, Val } | ClaimsSet].
+
+pem_to_key(Pem) ->
+    [Decoded] = public_key:pem_decode(Pem),
+    public_key:pem_entry_decode(Decoded).
