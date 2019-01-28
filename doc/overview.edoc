@@ -1,46 +1,42 @@
+@title jwt — Erlang JWT Library
+
+@doc
+
+<hr></hr>
+
+<a target="_blank" href="https://hex.pm/packages/jwt">
+  <img alt="Hex.pm" src="https://img.shields.io/hexpm/v/jwt.svg"/>
+</a>
+
+<hr></hr>
 
 
-# jwt — Erlang JWT Library #
----------
+JWT is a simple authorization token <a target="_blank" href="https://jwt.io/">format</a> based on JSON.
 
-[![Hex.pm](https://img.shields.io/hexpm/v/jwt.svg)
-](https://hex.pm/packages/jwt)
-
----------
-
-JWT is a simple authorization token [format](https://jwt.io/) based on JSON.
-
-
-#### <a name="Installation">Installation</a> ####
+=== Installation ===
 
 If you use rebar (supports both 2 and 3 versions) or mix (Elixir):
 
-```erlang
-
+<pre lang="erlang">
 % in rebar.config for rebar3
 {deps, [{jwt}]}.
 
 % or for rebar2
 {deps, [{jwt, ".*", {git, "https://github.com/artemeff/jwt", {tag, "0.1.0"}}}]}
+</pre>
 
-```
-
-```elixir
-
+<pre lang="elixir">
 % mix.exs
 def deps do
   [{:jwt, "~> 0.1"}]
 end
-
-```
+</pre>
 
 Or use it as git dependency.
 
+=== Usage example ===
 
-#### <a name="Usage_example">Usage example</a> ####
-
-```erlang
-
+<pre lang="erlang"><![CDATA[
 %% Create JWT token
 > application:ensure_all_started(jwt).
 > Key = <<"supas3cri7">>.
@@ -55,6 +51,9 @@ Or use it as git dependency.
 
 %% Parse JWT token
 > {ok, Claims} = jwt:decode(Token, Key).
+
+
+
 %% Issuer specific keys workflow
 
 %% The encoder just knows about itself
@@ -72,26 +71,16 @@ Or use it as git dependency.
 > IssuerKeyMapping = #{ Issuer => IssuerKey,
                         <<"iss2">> => <<"Issuer2Key">>}.
 > {ok, Claims} = jwt:decode(Token, <<"default-key">>, IssuerKeyMapping).
+]]></pre>
 
-```
----------
+<hr></hr>
 
+== Contributing ==
 
-### <a name="Contributing">Contributing</a> ###
-* Fork it
-* Create your feature branch (`git checkout -b my-new-feature`)
-* Commit your changes (`git commit -am 'add some feature'`)
-* Push to the branch (`git push origin my-new-feature`)
-* Create new Pull Request
-
-
-
-
-## Modules ##
-
-
-<table width="100%" border="0" summary="list of modules">
-<tr><td><a href="http://github.com/artemeff/jwt/blob/master/doc/jwk.md" class="module">jwk</a></td></tr>
-<tr><td><a href="http://github.com/artemeff/jwt/blob/master/doc/jwt.md" class="module">jwt</a></td></tr>
-<tr><td><a href="http://github.com/artemeff/jwt/blob/master/doc/jwt_ecdsa.md" class="module">jwt_ecdsa</a></td></tr></table>
-
+<ul>
+  <li>Fork it</li>
+  <li>Create your feature branch (`git checkout -b my-new-feature')</li>
+  <li>Commit your changes (`` git commit -am 'add some feature' '')</li>
+  <li>Push to the branch (`git push origin my-new-feature')</li>
+  <li>Create new Pull Request</li>
+</ul>
