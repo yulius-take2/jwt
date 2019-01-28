@@ -1,4 +1,4 @@
-.PHONY: all compile test lint clean
+.PHONY: all compile test lint doc clean
 
 all: compile
 
@@ -10,6 +10,9 @@ test:
 
 lint:
 	elvis rock --verbose
+
+doc:
+	@./rebar3 edoc
 
 clean:
 	@./rebar3 clean
