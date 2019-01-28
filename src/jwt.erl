@@ -13,7 +13,7 @@
 -export([encode/3, encode/4]).
 
 -define(HOUR, 3600).
--define(DAY, 3600 * 60).
+-define(DAY, (?HOUR * 24)).
 
 -type expiration() :: {hourly, non_neg_integer()} | {daily, non_neg_integer()} | non_neg_integer().
 
@@ -263,7 +263,9 @@ epoch() -> erlang:system_time(seconds).
 -spec expiration_to_epoch(Expiration :: expiration()) -> neg_integer().
 %% @private
 expiration_to_epoch(Expiration) ->
-    Ts = epoch(),
+    expiration_to_epoch(Expiration, epoch()).
+
+expiration_to_epoch(Expiration, Ts) ->
     case Expiration of
         {hourly, Expiration0} -> (Ts - (Ts rem ?HOUR)) + Expiration0;
         {daily, Expiration0} -> (Ts - (Ts rem ?DAY)) + Expiration0;

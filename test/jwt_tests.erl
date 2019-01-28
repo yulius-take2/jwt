@@ -27,7 +27,9 @@ jwt_test_() -> {setup,
     , fun test_encoding_with_ecdsa/0
     , fun test_decoding_ecdsa_with_public_key/0
     , fun test_decoding_ecdsa_invalid_signature/0
-   ]}.
+
+    , fun test_expiration_to_epoch_when_daily_given/0
+    ]}.
 
 start() -> ok.
 stop(_) -> ok.
@@ -214,6 +216,11 @@ test_decoding_ecdsa_invalid_signature() ->
     >>,
     ?assertMatch({error, invalid_signature},
         jwt:decode(makeToken(Header, Payload, Signature), ecdsa_public_key())).
+
+test_expiration_to_epoch_when_daily_given() ->
+    Now            = 1548616000,
+    BeginningOfDay = 1548547200,
+    ?assertEqual(BeginningOfDay, jwt:expiration_to_epoch({daily, 0}, Now)).
 
 %%
 %% Helpers
