@@ -5,7 +5,7 @@ otp_release:
   - 21.2
 
 script:
-  - rebar3 eunit
+  - rebar3 do eunit, lint
 
 deploy:
   provider: script
