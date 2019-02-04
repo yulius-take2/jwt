@@ -7,6 +7,9 @@ otp_release:
 script:
   - rebar3 do eunit, lint
 
+after_success:
+  - rebar3 coveralls send
+
 deploy:
   provider: script
   script: scripts/hex.sh
