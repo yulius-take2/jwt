@@ -13,7 +13,15 @@ GitDeps =
     , {jsx, ".*", {git, "https://github.com/talentdeficit/jsx", {tag, "2.8.0"}}}
     ],
 
-case IsRebar3OrMix of
+Config = case IsRebar3OrMix of
   true -> CONFIG;
   _ -> lists:keyreplace(deps, 1, CONFIG, {deps, GitDeps})
+end,
+
+case os:getenv("CI") of
+    "true" ->
+        Plugins = [rebar3_lint | proplists:get_value(plugins, Config, [])],
+        lists:keyreplace(plugins, 1, Config, {plugins, Plugins});
+    _ ->
+        Config
 end.

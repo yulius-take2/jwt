@@ -5,6 +5,7 @@ _build
 *.plt
 *.sublime-*
 erl_crash.dump
+rebar3.crashdump
 doc/edoc-info
 doc/*.png
 doc/*.css
