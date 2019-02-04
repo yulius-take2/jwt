@@ -18,10 +18,18 @@ Config = case IsRebar3OrMix of
   _ -> lists:keyreplace(deps, 1, CONFIG, {deps, GitDeps})
 end,
 
-case os:getenv("CI") of
+ConfigCI = case os:getenv("CI") of
     "true" ->
         Plugins = [rebar3_lint | proplists:get_value(plugins, Config, [])],
         lists:keyreplace(plugins, 1, Config, {plugins, Plugins});
     _ ->
         Config
+end,
+
+case os:getenv("TRAVIS") of
+  "true" ->
+    JobId = os:getenv("TRAVIS_JOB_ID"),
+    lists:keystore(coveralls_service_job_id, 1, ConfigCI, {coveralls_service_job_id, JobId});
+  _ ->
+    ConfigCI
 end.
