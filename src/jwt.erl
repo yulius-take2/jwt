@@ -1,6 +1,4 @@
-%% @doc
-%%
-%% JWT Library for Erlang.
+%% @doc JWT Library for Erlang.
 %%
 %% Written by Peter Hizalev at Kato (http://kato.im)
 %%
@@ -16,6 +14,7 @@
 -define(DAY, (?HOUR * 24)).
 
 -type expiration() :: {hourly, non_neg_integer()} | {daily, non_neg_integer()} | non_neg_integer().
+-type context() :: map().
 
 %%
 %% API
@@ -25,9 +24,7 @@
     ClaimsSet :: map() | list(),
     Key :: binary() | public_key:private_key()
 ) -> {ok, Token :: binary()} | {error, any()}.
-%% @doc
-%%
-%% Creates a token from given data and signs it with a given secret
+%% @doc Creates a token from given data and signs it with a given secret
 %%
 %% Parameters are
 %% <ul>
@@ -58,9 +55,8 @@ encode(Alg, ClaimsSet, Key) ->
     Expiration :: expiration(),
     Key :: binary() | public_key:private_key()
 ) -> {ok, Token :: binary()} | {error, any()}.
-%% @doc
+%% @doc Creates a token from given data and signs it with a given secret
 %%
-%% Creates a token from given data and signs it with a given secret
 %% and also adds `exp' claim to payload
 %%
 %% `Expiration' can be one of the tuples:
@@ -78,9 +74,7 @@ encode(Alg, ClaimsSet, Expiration, Key) ->
     Token :: binary(),
     Key :: binary() | public_key:public_key() | public_key:private_key()
 ) -> {ok, Claims :: map()} | {error, any()}.
-%% @doc
-%%
-%% Decodes a token, checks the signature and returns the content of the token
+%% @doc Decodes a token, checks the signature and returns the content of the token
 %%
 %% <ul>
 %%   <li>`Token' is a JWT itself</li>
@@ -98,34 +92,100 @@ decode(Token, Key) ->
     DefaultKey :: binary() | public_key:public_key() | public_key:private_key(),
     IssuerKeyMapping :: map()
 ) -> {ok, Claims :: map()} | {error, any()}.
-%% @doc
-%%
-%% Decode with an issuer key mapping
+%% @doc Decode with an issuer key mapping
 %%
 %% Receives the issuer key mapping as the last parameter
 %%
 %% @end
 decode(Token, DefaultKey, IssuerKeyMapping) ->
-    case split_token(Token) of
-        SplitToken = [Header, Claims | _] ->
-            case decode_jwt(SplitToken) of
-                {#{<<"alg">> := Alg} = _Header, ClaimsJSON, Signature} ->
-                    Issuer = maps:get(<<"iss">>, ClaimsJSON, undefined),
-                    Key = maps:get(Issuer, IssuerKeyMapping, DefaultKey),
-                    case jwt_check_sig(Alg, Header, Claims, Signature, Key) of
-                        false -> {error, invalid_signature};
-                        true ->
-                            case jwt_is_expired(ClaimsJSON) of
-                                true  -> {error, expired};
-                                false -> {ok, ClaimsJSON}
-                            end
-                    end;
-                invalid -> {error, invalid_token}
-            end;
-        _ -> {error, invalid_token}
+    result(run(#{token => Token}, [
+        fun split_token/1,
+        fun decode_jwt/1,
+        fun (Context) ->
+            get_key(Context, DefaultKey, IssuerKeyMapping)
+        end,
+        fun check_signature/1,
+        fun check_expired/1
+    ])).
+
+result(#{claims_json := ClaimsJSON}) ->
+    {ok, ClaimsJSON};
+result({error, _} = Error) ->
+    Error.
+
+run(Acc, []) ->
+    Acc;
+run(Acc, [F|Funs]) ->
+    case F(Acc) of
+        {true, NewAcc} ->
+            run(NewAcc, Funs);
+        {false, Result} ->
+            Result
     end.
 
+-spec split_token(Context :: context()) ->
+    {true, context()} | {false, {error, invalid_token}}.
+%% @private
+split_token(#{token := Token} = Context) ->
+    case binary:split(Token, <<".">>, [global]) of
+        [Header, Claims, Signature] ->
+            {true, maps:merge(Context, #{
+                header => Header,
+                claims => Claims,
+                signature => Signature
+            })};
+        _ ->
+            {false, {error, invalid_token}}
+    end.
 
+-spec decode_jwt(context()) -> {true, context()} | {false, {error, invalid_token}}.
+%% @private
+decode_jwt(#{header := Header, claims := Claims} = Context) ->
+    try
+        [HeaderJSON, ClaimsJSON] =
+            Decoded = [jsx_decode_safe(base64url:decode(X)) || X <- [Header, Claims]],
+        case lists:any(fun(E) -> E =:= invalid end, Decoded) of
+            false ->
+                {true, maps:merge(Context, #{
+                    header_json => HeaderJSON,
+                    claims_json => ClaimsJSON
+                })};
+            true  ->
+                {false, {error, invalid_token}}
+        end
+    catch _:_ ->
+        {false, {error, invalid_token}}
+    end.
+
+%% @private
+get_key(#{claims_json := Claims} = Context, DefaultKey, IssuerKeyMapping) ->
+    Issuer = maps:get(<<"iss">>, Claims, undefined),
+    Key = maps:get(Issuer, IssuerKeyMapping, DefaultKey),
+    {true, maps:merge(Context, #{key => Key})}.
+
+%% @private
+check_signature(#{
+    key         := Key,
+    header      := Header,
+    claims      := Claims,
+    signature   := Signature,
+    header_json := #{<<"alg">> := Alg}
+} = Context) ->
+    case jwt_check_sig(Alg, Header, Claims, Signature, Key) of
+        true ->
+            {true, Context};
+        false ->
+            {false, {error, invalid_signature}}
+    end.
+
+%% @private
+check_expired(#{claims_json := ClaimsJSON} = Context) ->
+    case jwt_is_expired(ClaimsJSON) of
+        true  ->
+            {false, {error, expired}};
+        false ->
+            {true, Context}
+    end.
 
 %%
 %% Decoding helpers
@@ -182,27 +242,6 @@ jwt_check_sig({ecdsa, Crypto}, Payload, Signature, Key) ->
 
 jwt_check_sig(_, _, _, _) ->
     false.
-
--spec split_token(binary()) -> list(binary()).
-%% @private
-split_token(Token) ->
-    binary:split(Token, <<".">>, [global]).
-
--spec decode_jwt(list(binary())) -> {map(), map(), binary()} | invalid.
-%% @private
-decode_jwt([Header, Claims, Signature]) ->
-    try
-        [HeaderJSON, ClaimsJSON] =
-            Decoded = [jsx_decode_safe(base64url:decode(X)) || X <- [Header, Claims]],
-        case lists:any(fun(E) -> E =:= invalid end, Decoded) of
-            true  -> invalid;
-            false -> {HeaderJSON, ClaimsJSON, Signature}
-        end
-    catch _:_ ->
-        invalid
-    end;
-decode_jwt(_) ->
-    invalid.
 
 %%
 %% Encoding helpers

@@ -6,13 +6,11 @@
 * [Function Index](#index)
 * [Function Details](#functions)
 
-.
+JWT Library for Erlang.
 
 <a name="description"></a>
 
 ## Description ##
-
-JWT Library for Erlang.
 
 Written by Peter Hizalev at Kato (http://kato.im)
 
@@ -37,7 +35,7 @@ expiration() = {hourly, non_neg_integer()} | {daily, non_neg_integer()} | non_ne
 ## Function Index ##
 
 
-<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#decode-2">decode/2</a></td><td>.</td></tr><tr><td valign="top"><a href="#decode-3">decode/3</a></td><td>.</td></tr><tr><td valign="top"><a href="#encode-3">encode/3</a></td><td>.</td></tr><tr><td valign="top"><a href="#encode-4">encode/4</a></td><td>.</td></tr></table>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#decode-2">decode/2</a></td><td>Decodes a token, checks the signature and returns the content of the token.</td></tr><tr><td valign="top"><a href="#decode-3">decode/3</a></td><td>Decode with an issuer key mapping.</td></tr><tr><td valign="top"><a href="#encode-3">encode/3</a></td><td>Creates a token from given data and signs it with a given secret.</td></tr><tr><td valign="top"><a href="#encode-4">encode/4</a></td><td>Creates a token from given data and signs it with a given secret.</td></tr></table>
 
 
 <a name="functions"></a>
@@ -111,6 +109,7 @@ encode(Alg::binary(), ClaimsSet::map() | list(), Expiration::<a href="#type-expi
 <br />
 
 Creates a token from given data and signs it with a given secret
+
 and also adds `exp` claim to payload
 
 `Expiration` can be one of the tuples:
