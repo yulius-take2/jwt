@@ -67,7 +67,7 @@ encode(Alg, ClaimsSet, Key) ->
 %%
 %% @end
 encode(Alg, ClaimsSet, Expiration, Key) ->
-    Claims = base64url:encode(jsx:encode(jwt_add_exp(ClaimsSet, Expiration))),
+    Claims = jwt_add_exp(ClaimsSet, Expiration),
     encode(Alg, Claims, Key).
 
 -spec decode(
