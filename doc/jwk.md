@@ -1,9 +1,12 @@
 
 
 # Module jwk #
+* [Description](#description)
 * [Data Types](#types)
 * [Function Index](#index)
 * [Function Details](#functions)
+
+RFC 7517: JSON Web Key (JWK).
 
 <a name="types"></a>
 
@@ -54,7 +57,7 @@ public_key() = #RSAPublicKey{} | <a href="#type-pem">pem()</a>
 ## Function Index ##
 
 
-<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#decode-2">decode/2</a></td><td></td></tr><tr><td valign="top"><a href="#encode-2">encode/2</a></td><td></td></tr></table>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#decode-2">decode/2</a></td><td>decode JWK to Erlang/OTP Key.</td></tr><tr><td valign="top"><a href="#encode-2">encode/2</a></td><td>encode Erlang/OTP Key to JWK.</td></tr></table>
 
 
 <a name="functions"></a>
@@ -70,6 +73,8 @@ decode(Id::<a href="#type-id">id()</a>, Json::<a href="#type-json">json()</a>) -
 </code></pre>
 <br />
 
+decode JWK to Erlang/OTP Key
+
 <a name="encode-2"></a>
 
 ### encode/2 ###
@@ -78,4 +83,6 @@ decode(Id::<a href="#type-id">id()</a>, Json::<a href="#type-json">json()</a>) -
 encode(Id::<a href="#type-id">id()</a>, PEM::<a href="#type-public_key">public_key()</a>) -&gt; {ok, <a href="#type-json">json()</a>} | {error, term()}
 </code></pre>
 <br />
+
+encode Erlang/OTP Key to JWK
 
