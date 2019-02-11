@@ -3,6 +3,10 @@
 # jwt — Erlang JWT Library #
 ---------
 
+[![Build Status](https://travis-ci.org/artemeff/jwt.svg?branch=master)
+](https://travis-ci.org/artemeff/jwt)
+[![Coverage Status](https://coveralls.io/repos/github/artemeff/jwt/badge.svg?branch=master)
+](https://coveralls.io/github/artemeff/jwt?branch=master)
 [![Hex.pm](https://img.shields.io/hexpm/v/jwt.svg)
 ](https://hex.pm/packages/jwt)
 

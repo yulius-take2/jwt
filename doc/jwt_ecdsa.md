@@ -16,8 +16,7 @@ Helper functions for encoding/decoding ECDSA signature
 ## Function Index ##
 
 
-<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#signature-1">signature/1</a></td><td><p></p>Transcode the ECDSA Base64-encoded signature into ASN.1/DER format.</td></tr><tr><td valign="top"><a href="#signature-3">signature/3</a></td><td><p></p>Transcodes the JCA ASN.1/DER-encoded signature into the concatenated R + S format
-a.k.a <em>raw</em> format.</td></tr></table>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#signature-1">signature/1</a></td><td>Signature for JWT verification.</td></tr><tr><td valign="top"><a href="#signature-3">signature/3</a></td><td>Signature to sign JWT.</td></tr></table>
 
 
 <a name="functions"></a>
@@ -30,6 +29,8 @@ a.k.a <em>raw</em> format.</td></tr></table>
 
 `signature(Base64Sig) -> any()`
 
+Signature for JWT verification
+
 Transcode the ECDSA Base64-encoded signature into ASN.1/DER format
 
 <a name="signature-3"></a>
@@ -37,6 +38,8 @@ Transcode the ECDSA Base64-encoded signature into ASN.1/DER format
 ### signature/3 ###
 
 `signature(Payload, Crypto, Key) -> any()`
+
+Signature to sign JWT
 
 Transcodes the JCA ASN.1/DER-encoded signature into the concatenated R + S format
 a.k.a _raw_ format

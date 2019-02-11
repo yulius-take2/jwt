@@ -3,42 +3,7 @@
 
 -define(SECRET, <<"supas3cri7">>).
 
-jwt_test_() -> {setup,
-    fun start/0, fun stop/1,
-    [ fun test_encoding/0
-    , fun test_encoding_with_exp/0
-    , fun test_encoding_map_claimset_with_exp/0
-    , fun test_encoding_with_undefined_algorithm/0
-    , fun test_encoding_with_all_algorithms/0
-    , fun test_decoding_simple/0
-    , fun test_decoding_header_error/0
-    , fun test_decoding_payload_error/0
-    , fun test_decoding_signature_error/0
-    , fun test_decoding_very_bad_token/0
-    , fun test_decoding_without_type/0
-
-    , fun test_encoding_with_none/0
-    , fun test_decoding_with_none/0
-
-    , fun test_encoding_with_rs256/0
-    , fun test_decoding_with_rs256/0
-    , fun test_decoding_with_rs256_invalid_signature/0
-
-    , fun test_encoding_with_ecdsa/0
-    , fun test_decoding_ecdsa_with_public_key/0
-    , fun test_decoding_ecdsa_invalid_signature/0
-
-    , fun test_expiration_to_epoch_when_daily_given/0
-    ]}.
-
-start() -> ok.
-stop(_) -> ok.
-
-%%
-%% Tests
-%%
-
-test_encoding() ->
+encoding_test() ->
     Claims = [{user_id, 42}, {user_name, <<"John Doe">>}],
     {ok, Token} = jwt:encode(<<"HS256">>, Claims, ?SECRET),
 
@@ -48,29 +13,29 @@ test_encoding() ->
 
     ?assertEqual(makeToken(ExpHeader, ExpPayload, ExpSignature), Token).
 
-test_encoding_with_exp() ->
+encoding_with_exp_test() ->
     ExpirationSeconds = 86400,
     Result = jwt:encode(<<"HS256">>, [], ExpirationSeconds, ?SECRET),
 
     ?assertMatch({ok, _Token}, Result).
 
-test_encoding_map_claimset_with_exp() ->
+encoding_map_claimset_with_exp_test() ->
     ExpirationSeconds = 86400,
     Result = jwt:encode(<<"HS256">>, #{}, ExpirationSeconds, ?SECRET),
 
     ?assertMatch({ok, _Token}, Result).
 
-test_encoding_with_undefined_algorithm() ->
+encoding_with_undefined_algorithm_test() ->
     Error = jwt:encode(<<"HS128">>, [], ?SECRET),
 
     ?assertEqual({error, algorithm_not_supported}, Error).
 
-test_encoding_with_all_algorithms() ->
-    ?assertMatch({ok, _Token}, jwt:encode(<<"HS256">>, [], ?SECRET)),
-    ?assertMatch({ok, _Token}, jwt:encode(<<"HS384">>, [], ?SECRET)),
-    ?assertMatch({ok, _Token}, jwt:encode(<<"HS512">>, [], ?SECRET)).
+encoding_with_all_algorithms_test_() ->
+    [?_assertMatch({ok, _Token}, jwt:encode(<<"HS256">>, [], ?SECRET)),
+    ?_assertMatch({ok, _Token}, jwt:encode(<<"HS384">>, [], ?SECRET)),
+    ?_assertMatch({ok, _Token}, jwt:encode(<<"HS512">>, [], ?SECRET))].
 
-test_decoding_simple() ->
+decoding_simple_test() ->
     Header = <<"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9">>,
     Payload = <<"eyJ1c2VyX2lkIjo0MiwidXNlcl9uYW1lIjoiSm9obiBTbm93In0">>,
     Signature = <<"RzveVJs7YQbgVVgtmPRx7lOQOs89pCFxjLIEyzgnFaA">>,
@@ -84,7 +49,7 @@ test_decoding_simple() ->
 %%
 %% "typ" (Type) Header Parameter is OPTIONAL
 %% see https://tools.ietf.org/html/rfc7519#section-5.1
-test_decoding_without_type() ->
+decoding_without_type_test() ->
     TokenWithoutTypHeder = <<
         "eyJhbGciOiJIUzI1NiJ9.",
         "eyJ1c2VyX2lkIjo0NCwidXNlcl9uYW1lIjoiSmFpbWUgTGFubmlzdGVyIn0.",
@@ -97,7 +62,7 @@ test_decoding_without_type() ->
                        , <<"user_name">> := <<"Jaime Lannister">>
                        }}, Claims).
 
-test_decoding_header_error() ->
+decoding_header_error_test() ->
     Header = <<"...">>,
     Payload = <<"eyJ1c2VyX2lkIjo0MiwidXNlcl9uYW1lIjoiSm9obiBTbm93In0">>,
     Signature = <<"RzveVJs7YQbgVVgtmPRx7lOQOs89pCFxjLIEyzgnFaA">>,
@@ -106,7 +71,7 @@ test_decoding_header_error() ->
 
     ?assertMatch({error, invalid_token}, Claims).
 
-test_decoding_payload_error() ->
+decoding_payload_error_test() ->
     Header = <<"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9">>,
     Payload = <<"...">>,
     Signature = <<"RzveVJs7YQbgVVgtmPRx7lOQOs89pCFxjLIEyzgnFaA">>,
@@ -115,7 +80,7 @@ test_decoding_payload_error() ->
 
     ?assertMatch({error, invalid_token}, Claims).
 
-test_decoding_signature_error() ->
+decoding_signature_error_test() ->
     Header = <<"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9">>,
     Payload = <<"eyJ1c2VyX2lkIjo0MiwidXNlcl9uYW1lIjoiSm9obiBTbm93In0">>,
     Signature = <<"RzveVJs7YQbgVVgtmPRx7lOQOs89pCFxjLIEyzgnFa">>,
@@ -124,7 +89,7 @@ test_decoding_signature_error() ->
 
     ?assertMatch({error, invalid_signature}, Claims).
 
-test_decoding_very_bad_token() ->
+decoding_very_bad_token_test() ->
     Claims = jwt:decode(<<"very_bad">>, ?SECRET),
 
     ?assertMatch({error, invalid_token}, Claims).
@@ -132,14 +97,14 @@ test_decoding_very_bad_token() ->
 %%
 %% both encoding / decoding with none MUST not be supported
 %% due to change the signature attack
-test_encoding_with_none() ->
+encoding_with_none_test() ->
     Claims = #{sub => 1234567890, name => <<"John Doe">>, admin => true},
     Result = jwt:encode(<<"none">>, Claims, ?SECRET),
 
     ?assertMatch({error, algorithm_not_supported}, Result).
 
 
-test_decoding_with_none() ->
+decoding_with_none_test() ->
     Header = <<"eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0">>,
     Payload = <<"eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9">>,
     Signature = <<"2XijNOVI9LXP9nWf-oj2SEWWNlcwmxzlQNGK1WdaWcQ">>,
@@ -151,7 +116,7 @@ test_decoding_with_none() ->
 
 %%
 %%
-test_encoding_with_rs256() ->
+encoding_with_rs256_test() ->
     Claims = #{sub => 1234567890, name => <<"John Doe">>, admin => true},
     {ok, Token} = jwt:encode(<<"RS256">>, Claims, rsa_secret()),
 
@@ -161,7 +126,7 @@ test_encoding_with_rs256() ->
 
     ?assertEqual(makeToken(ExpHeader, ExpPayload, ExpSignature), Token).
 
-test_decoding_with_rs256() ->
+decoding_with_rs256_test() ->
     Header = <<"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9">>,
     Payload = <<"eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9">>,
     Signature = <<"EkN-DOsnsuRjRO6BxXemmJDm3HbxrbRzXglbN2S4sOkopdU4IsDxTI8jO19W_A4K8ZPJijNLis4EZsHeY559a4DFOd50_OqgHGuERTqYZyuhtF39yxJPAjUESwxk2J5k_4zM3O-vtd1Ghyo4IbqKKSy6J9mTniYJPenn5-HIirE">>,
@@ -172,7 +137,7 @@ test_decoding_with_rs256() ->
                         <<"name">>  := <<"John Doe">>,
                         <<"admin">> := true}}, Claims).
 
-test_decoding_with_rs256_invalid_signature() ->
+decoding_with_rs256_invalid_signature_test() ->
     Header = <<"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9">>,
     Payload = <<"eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9">>,
     Signature = <<"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9">>,
@@ -182,7 +147,7 @@ test_decoding_with_rs256_invalid_signature() ->
     ?assertMatch({error, invalid_signature}, Claims).
 
 
-test_encoding_with_ecdsa() ->
+encoding_with_ecdsa_test() ->
     Claims = #{
       <<"admin">> => true,
       <<"name">> => <<"Daenerys Targaryen">>
@@ -194,7 +159,7 @@ test_encoding_with_ecdsa() ->
         <<"name">> := <<"Daenerys Targaryen">>
     }}, jwt:decode(Token, Key)).
 
-test_decoding_ecdsa_with_public_key() ->
+decoding_ecdsa_with_public_key_test() ->
     Header = <<"eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9">>,
     Payload = <<"eyJhZG1pbiI6dHJ1ZSwibmFtZSI6IkpvcmFoIE1vcm1vbnQifQ">>,
     Signature = <<
@@ -207,7 +172,7 @@ test_decoding_ecdsa_with_public_key() ->
         <<"name">> := <<"Jorah Mormont">>
     }}, jwt:decode(Token, ecdsa_public_key())).
 
-test_decoding_ecdsa_invalid_signature() ->
+decoding_ecdsa_invalid_signature_test() ->
     Header = <<"eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9">>,
     Payload = <<"eyJuYW1lIjoiSm9yYWggTW9ybW9udCIsImFkbWluIjp0cnVlfQ">>,
     Signature = <<
@@ -217,10 +182,17 @@ test_decoding_ecdsa_invalid_signature() ->
     ?assertMatch({error, invalid_signature},
         jwt:decode(makeToken(Header, Payload, Signature), ecdsa_public_key())).
 
-test_expiration_to_epoch_when_daily_given() ->
+expiration_to_epoch_when_daily_given_test() ->
     Now            = 1548616000,
     BeginningOfDay = 1548547200,
     ?assertEqual(BeginningOfDay, jwt:expiration_to_epoch({daily, 0}, Now)).
+
+expired_token_test_() ->
+    {ok, ExpiredToken} = jwt:encode(<<"HS256">>, #{}, -1, ?SECRET),
+    {ok, UnexpiredToken} = jwt:encode(<<"HS256">>, #{}, 60, ?SECRET),
+    [?_assertEqual({error, expired}, jwt:decode(ExpiredToken, ?SECRET)),
+    ?_assertMatch({ok, #{<<"exp">> := _Exp }}, jwt:decode(UnexpiredToken, ?SECRET))].
+
 
 %%
 %% Helpers

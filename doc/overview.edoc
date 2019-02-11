@@ -4,6 +4,12 @@
 
 <hr></hr>
 
+<a target="_blank" href="https://travis-ci.org/artemeff/jwt">
+  <img alt="Build Status" src="https://travis-ci.org/artemeff/jwt.svg?branch=master"/>
+</a>
+<a target="_blank" href="https://coveralls.io/github/artemeff/jwt?branch=master">
+  <img alt="Coverage Status" src="https://coveralls.io/repos/github/artemeff/jwt/badge.svg?branch=master"/>
+</a>
 <a target="_blank" href="https://hex.pm/packages/jwt">
   <img alt="Hex.pm" src="https://img.shields.io/hexpm/v/jwt.svg"/>
 </a>
