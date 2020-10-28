@@ -13,6 +13,17 @@
 -define(HOUR, 3600).
 -define(DAY, (?HOUR * 24)).
 
+%% Handle version compatibility for crypto
+-ifdef(OTP_RELEASE).
+  -if(?OTP_RELEASE >= 23).
+    -define(HMAC(Type, Key, Data), crypto:mac(hmac, Type, Key, Data)).
+  -else.
+    -define(HMAC(Type, Key, Data), crypto:hmac(Type, Key, Data)).
+  -endif.
+-else.
+  -define(HMAC(Type, Key, Data), crypto:hmac(Type, Key, Data)).
+-endif.
+
 -type expiration() :: {hourly, non_neg_integer()} | {daily, non_neg_integer()} | non_neg_integer().
 -type context() :: map().
 
@@ -271,7 +282,7 @@ jwt_sign(Alg, Payload, Key) ->
     jwt_sign_with_crypto(algorithm_to_crypto(Alg), Payload, Key).
 
 jwt_sign_with_crypto({hmac, Crypto}, Payload, Key) ->
-    base64url:encode(crypto:hmac(Crypto, Key, Payload));
+    base64url:encode(?HMAC(Crypto, Key, Payload));
 
 jwt_sign_with_crypto({Algo, Crypto}, Payload, Pem)
     when (Algo =:= rsa orelse Algo =:= ecdsa) andalso is_binary(Pem) ->
