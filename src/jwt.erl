@@ -243,8 +243,12 @@ jwt_check_sig({hmac, _} = Alg, Payload, Signature, Key) ->
 
 jwt_check_sig({Algo, Crypto}, Payload, Signature, Pem)
     when (Algo =:= rsa orelse Algo =:= ecdsa) andalso is_binary(Pem) ->
-    jwt_check_sig({Algo, Crypto}, Payload, Signature, pem_to_key(Pem));
-
+        case pem_to_key(Pem) of
+            <<"">> ->
+                false;
+            Key ->
+                jwt_check_sig({Algo, Crypto}, Payload, Signature, Key)
+        end;
 jwt_check_sig({rsa, Crypto}, Payload, Signature, Key) ->
     public_key:verify(Payload, Crypto, base64url:decode(Signature), Key);
 
