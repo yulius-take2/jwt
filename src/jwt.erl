@@ -335,6 +335,8 @@ pem_to_key(Pem) ->
         [_, Key] ->
             Key;
         [Key] ->
-            Key
+            Key;
+        [] ->
+            <<"">>
     end,
     public_key:pem_entry_decode(Decoded).
